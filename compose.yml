@@ -1,0 +1,12 @@
+services:
+  strands-agents:
+    build:
+      context: .
+    tty: true
+    volumes:
+      - .:/app
+    ports:
+      - "9000:9000"
+    command: sh -c "npm install && npx -y tsx agents.ts"
+    env_file:
+      - .env
