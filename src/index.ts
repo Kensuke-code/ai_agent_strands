@@ -1,7 +1,7 @@
 import { createModel } from '@/strands-agents/model'
 import { tavilySearchTool, calendarTool } from '@/strands-agents/tools'
 import { createAgent } from '@/strands-agents/agent'
-import { createApp, startServer } from '@/server/server'
+import { createApp, startServer } from '@/server/app'
 
 const main = async () => {
   // Create model
