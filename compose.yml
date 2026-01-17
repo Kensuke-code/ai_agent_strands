@@ -7,6 +7,6 @@ services:
       - .:/app
     ports:
       - "9000:9000"
-    command: sh -c "npx -y tsx agents.ts"
+    command: sh -c "npx -y tsx main.ts"
     env_file:
       - .env
