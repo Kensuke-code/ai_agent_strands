@@ -12,6 +12,7 @@ export const invocationsRoute = (app: Hono, agent: Agent) => {
         return c.json({ error: 'Prompt is required' }, 400)
       }
 
+      // Stream response
       return streamText(c, async (stream) => {
         for await (const event of agent.stream(prompt)) {
           if (event.type === 'modelContentBlockDeltaEvent' && event.delta.type === 'textDelta') {
