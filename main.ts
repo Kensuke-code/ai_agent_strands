@@ -1,8 +1,11 @@
 import { createAgent } from './agents';
 import { BedrockModel } from '@strands-agents/sdk'
 import { tavilySearchTool, calendarTool } from './tools';
+import { Hono } from 'hono';
+import { streamText } from 'hono/streaming';
+import { serve } from '@hono/node-server';
 
-const main = async() => {
+const main = async () => {
   // Create model
   const model = new BedrockModel({
     region: 'ap-northeast-1',
@@ -17,15 +20,42 @@ const main = async() => {
   // Create agent
   const agent = createAgent(model, defaultTools)
 
-  // Invoke
-  for await (const event of agent.stream('日本の総理大臣は？')) {
-    if (event.type === 'modelContentBlockDeltaEvent' && event.delta.type === 'textDelta') {
-      // 改行なしで文字列を表示する
-      process.stdout.write(event.delta.text)
+  const app = new Hono();
+
+  app.get('/ping', (c) => 
+    c.json({  
+      status: 'Healthy' ,
+      time_of_last_update: Math.floor(Date.now() / 1000),
+    })
+  );
+
+  app.post('/invocations', async (c) => {
+    try {
+      const params = await c.req.json();
+      const { prompt } = params;
+      
+      if (!prompt) {
+        return c.json({ error: 'Prompt is required' }, 400);
+      }
+
+      return streamText(c, async (stream) => {
+        for await (const event of agent.stream(prompt)) {
+          if (event.type === 'modelContentBlockDeltaEvent' && event.delta.type === 'textDelta') {
+            await stream.write(event.delta.text);
+          }
+        }
+      });
+    } catch (error) {
+      return c.json({ error: 'Internal Server Error' }, 500);
     }
-  }
-  // 最後の行の出力を確定させるため
-  console.log('\n')
+  });
+
+  console.log(`AgentCore Runtime server listening on port ${9000}`)
+  serve({
+    fetch: app.fetch,
+    port: 9000,
+  });
 };
 
 main();
+
