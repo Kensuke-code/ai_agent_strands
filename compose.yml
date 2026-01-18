@@ -10,7 +10,3 @@ services:
     command: sh -c "npx -y tsx src/index.ts"
     env_file:
       - .env
-
-networks:
-  app-network:
-    external: true # Use an existing network named 'app-network'
